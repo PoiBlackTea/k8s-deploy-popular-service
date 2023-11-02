@@ -53,6 +53,23 @@ gke_subnetwork = gcp.compute.Subnetwork("gke-demo-subnet1",
     network=gke_network.id,
     private_ip_google_access=True)
 
+# create vpc nat
+addr = gcp.compute.Address("addr", region=region)
+router = gcp.compute.Router("router",
+    region=gke_subnetwork.region,
+    network=gke_network.id
+    )
+nat = gcp.compute.RouterNat("nat",
+    router=router.name,
+    region=router.region,
+    nat_ip_allocate_option="MANUAL_ONLY",
+    nat_ips=[addr.self_link],
+    source_subnetwork_ip_ranges_to_nat="ALL_SUBNETWORKS_ALL_IP_RANGES",
+    log_config=gcp.compute.RouterNatLogConfigArgs(
+        enable=True,
+        filter="ERRORS_ONLY",
+    ))
+
 # create GKE
 primary = gcp.container.Cluster("primary",
     location=location,
